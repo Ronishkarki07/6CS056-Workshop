@@ -6,13 +6,6 @@
     <a class="button" href="{{ route('students.create') }}">Add student</a>
 </div>
 <div class="card">
-    <form class="filters" method="GET">
-        <input name="search" value="{{ request('search') }}" placeholder="Search name, email, or phone">
-        <button type="submit">Search</button>
-        <a class="button secondary" href="{{ route('students.index') }}">Clear</a>
-    </form>
-</div>
-<div class="card">
     <table>
         <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
         <tbody>
@@ -30,6 +23,5 @@
         @endforelse
         </tbody>
     </table>
-    <div class="pagination">{{ $students->links() }}</div>
 </div>
 @endsection

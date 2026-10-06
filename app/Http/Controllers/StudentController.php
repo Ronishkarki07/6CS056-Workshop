@@ -2,28 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreStudentRequest;
+use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $students = Student::query()
-            ->when($request->string('search')->trim()->value(), function ($query, string $search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
-
-        return view('students.index', compact('students'));
+        return view('students.index', ['students' => Student::all()]);
     }
 
     public function create(): View
@@ -31,11 +20,11 @@ class StudentController extends Controller
         return view('students.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreStudentRequest $request): RedirectResponse
     {
-        $student = Student::create($this->validated($request));
+        $student = Student::create($request->validated());
 
-        return to_route('students.show', $student)->with('success', 'Student created successfully.');
+        return to_route('students.index')->with('success', "Student {$student->name} created successfully!");
     }
 
     public function show(Student $student): View
@@ -48,11 +37,11 @@ class StudentController extends Controller
         return view('students.edit', compact('student'));
     }
 
-    public function update(Request $request, Student $student): RedirectResponse
+    public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
-        $student->update($this->validated($request, $student));
+        $student->update($request->validated());
 
-        return to_route('students.show', $student)->with('success', 'Student updated successfully.');
+        return to_route('students.show', $student)->with('success', 'Student updated successfully!');
     }
 
     public function destroy(Student $student): RedirectResponse
@@ -60,22 +49,5 @@ class StudentController extends Controller
         $student->delete();
 
         return to_route('students.index')->with('success', 'Student deleted successfully.');
-    }
-
-    private function validated(Request $request, ?Student $student = null): array
-    {
-        $emailRule = 'required|email|max:255|unique:students,email';
-
-        if ($student) {
-            $emailRule .= ','.$student->id;
-        }
-
-        return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => $emailRule,
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'date_of_birth' => ['nullable', 'date'],
-        ]);
     }
 }
